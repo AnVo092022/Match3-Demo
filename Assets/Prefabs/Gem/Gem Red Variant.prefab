@@ -63,6 +63,10 @@ PrefabInstance:
       propertyPath: type
       value: 3
       objectReference: {fileID: 0}
+    - target: {fileID: 4012143081200386691, guid: a648d4a37c002a048a8d1fa8cf5bc912, type: 3}
+      propertyPath: destroyOject
+      value: 
+      objectReference: {fileID: 4971776220085873761, guid: 3ba4ec16335942e4fadec0e94e5c55a2, type: 3}
     - target: {fileID: 6828239395029983883, guid: a648d4a37c002a048a8d1fa8cf5bc912, type: 3}
       propertyPath: m_SpriteTilingProperty.oldSize.x
       value: 0.8102564

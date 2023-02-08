@@ -14,34 +14,47 @@ public class Board : MonoBehaviour
     // lưu 5 gem
     Gem[] gems;
 
+    public Gem Bomb;
+    float bombRate = 5f;
+
     public int gemSpeed = 8;
 
     public Gem[,] allGems;
 
-    
     public FindMatcher matcher;
+
+    public enum BoardState { wait, move };
+    public BoardState state = BoardState.move;
+
 
     private void Awake()
     {
         matcher = FindObjectOfType<FindMatcher>();
+        
     }
 
     // Start is called before the first frame update
     void Start()
     {
         allGems = new Gem[width, height];
-        Setup();   
+        Setup();
     }
 
     // Update is called once per frame
     void Update()
     {
-        matcher.FindAllMatches();
+        // matcher.FindAllMatches();
+        if (Input.GetKey(KeyCode.S))
+        {
+            ShuffleBoard();
+        }
     }
+
+
 
     void Setup()
     {
-        for (int x = 0; x < width; x++) 
+        for (int x = 0; x < width; x++)
         {
             for (int y = 0; y < height; y++)
             {
@@ -70,7 +83,11 @@ public class Board : MonoBehaviour
 
     void GenerateGems(Vector2Int pos, Gem gem)
     {
-        Gem currentGem = Instantiate(gem, new Vector3(pos.x, pos.y, 0f), Quaternion.identity);
+        if (Random.Range(0f, 100f) < bombRate)
+        {
+            gem = Bomb;
+        }
+        Gem currentGem = Instantiate(gem, new Vector3(pos.x, pos.y + height, 0f), Quaternion.identity);
         currentGem.transform.parent = transform;
         currentGem.name = $"Gem - {pos.x}, {pos.y}";
         currentGem.InitGem(pos, this);
@@ -81,7 +98,7 @@ public class Board : MonoBehaviour
     bool MatchAt(Vector2Int pos, Gem gem)
     {
         bool result = false;
-        if ( pos.x > 1 )
+        if (pos.x > 1)
         {
             if (allGems[pos.x - 1, pos.y].type == gem.type
                 && allGems[pos.x - 2, pos.y].type == gem.type)
@@ -104,6 +121,7 @@ public class Board : MonoBehaviour
     {
         if (allGems[pos.x, pos.y] != null && allGems[pos.x, pos.y].isMatched)
         {
+            Instantiate(allGems[pos.x, pos.y].destroyOject, new Vector2(pos.x, pos.y), Quaternion.identity);
             // xóa gem mà script đang gắn vào
             Destroy(allGems[pos.x, pos.y].gameObject);
             allGems[pos.x, pos.y] = null;
@@ -116,7 +134,133 @@ public class Board : MonoBehaviour
         {
             DeleteMatchAt(matcher.matches[i].pos);
         }
+
+        StartCoroutine(DownGemCo());
     }
 
+    // Co trong DownGemCo là Coroutine
+    IEnumerator DownGemCo()
+    {
+        yield return new WaitForSeconds(.5f);
+
+        int count = 0;
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                if (allGems[x, y] == null)
+                {
+                    count++;
+                }
+                else if (count > 0)
+                {
+                    // chuyển gem
+                    allGems[x, y].pos.y -= count;
+                    allGems[x, y - count] = allGems[x, y];
+                    allGems[x, y] = null;
+                }
+            }
+            count = 0;
+        }
+        StartCoroutine(FillBoardCo());
+    }
+
+    IEnumerator FillBoardCo()
+    {
+        yield return new WaitForSeconds(.5f);
+        RefillBoard();
+
+        yield return new WaitForSeconds(.5f);
+        matcher.FindAllMatches();
+
+        yield return new WaitForSeconds(.5f);
+        if (matcher.matches.Count > 0)
+        {
+            DeleteAllMatches();
+            
+        }
+        else
+        {
+            state = BoardState.move;
+        }
+
+    }
+
+    void RefillBoard()
+    {
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                if (allGems[x, y] == null)
+                {
+                    int gemToUse = Random.Range(0, gems.Length);
+                    GenerateGems(new Vector2Int(x, y), gems[gemToUse]);
+                }
+            }
+        }
+    }
+
+    void CheckDupGem()
+    {
+        List <Gem> foundGems = new List <Gem>();
+        //foundGems chứa tất cả Gems đang có trong của số Hierarchy
+        foundGems.AddRange(FindObjectsOfType<Gem>());
+        
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                if (foundGems.Contains(allGems[x, y]))
+                {
+                    foundGems.Remove(allGems[x, y]);
+                }
+            }
+        }
+
+        // gem đang có trong foundGems bị dup và sẽ bị xóa
+        foreach ( Gem g in foundGems)
+        {
+            Destroy(g);
+        }
+    }
+
+    private void ShuffleBoard()
+    {
+        if (state != BoardState.wait)
+        {
+            state = BoardState.wait;
+
+            List<Gem> gemsFromBoard = new List<Gem>();
+
+            for (int x = 0; x < width; x++)
+            {
+                for (int y = 0; y < height; y++)
+                {
+                    gemsFromBoard.Add(allGems[x, y]);
+                    allGems[x, y] = null;
+                }
+            }
+
+            for (int x = 0; x < width; x++)
+            {
+                for (int y = 0; y < height; y++)
+                {
+                    int gemsToUse = Random.Range(0, gemsFromBoard.Count);
+                    int loopCount = 0;
+                    while (MatchAt(new Vector2Int (x, y), gemsFromBoard[gemsToUse]) && loopCount > 100)
+                    {
+                        gemsToUse = Random.Range(0, gemsFromBoard.Count);
+                        loopCount++;
+                    }
+                    gemsFromBoard[gemsToUse].InitGem(new Vector2Int(x, y), this);
+                    allGems[x, y] = gemsFromBoard[gemsToUse];
+                    gemsFromBoard.RemoveAt(gemsToUse);
+                }
+                
+            }
+            StartCoroutine(FillBoardCo());
+        }
+    }
 
 }

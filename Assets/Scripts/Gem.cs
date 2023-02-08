@@ -19,10 +19,13 @@ public class Gem : MonoBehaviour
 
     Gem otherGem;
 
-    public enum GemType { blue, green, purple, red, yellow };
+    public enum GemType { blue, green, purple, red, yellow, bomb };
     public GemType type;
 
     public bool isMatched; // đánh dấu có gem cùng loại
+
+    public GameObject destroyOject;
+    public int burstRadius = 1;
 
     // Start is called before the first frame update
     void Start()
@@ -44,11 +47,19 @@ public class Gem : MonoBehaviour
         }
         if (mousePressed && Input.GetMouseButtonUp(0))
         {
-            finalPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            mousePressed = false;
+            mousePressed = false;            
+            //finalPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            //CalculateAngle();
 
-            CalculateAngle();
-            ChangeGemPos();
+            if (board.state == Board.BoardState.move)
+            {
+                finalPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+
+                CalculateAngle();
+            }
+
+
+
         }
     }
     public void InitGem(Vector2Int thePos, Board theBoard)
@@ -56,11 +67,15 @@ public class Gem : MonoBehaviour
         pos = thePos;
         board = theBoard;
     }
-    private void OnMouseDown()
+    public void OnMouseDown()
     {
-        firstPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        Debug.Log(firstPos);
-        mousePressed = true;
+        if (board.state == Board.BoardState.move)
+        {
+            firstPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            //Debug.Log(firstPos);
+            mousePressed = true;
+        }
+        
         
     }
 
@@ -73,6 +88,7 @@ public class Gem : MonoBehaviour
             swipeAngle = swipeAngle * 180 / Mathf.PI;
 
             Debug.Log(swipeAngle);
+            ChangeGemPos();
         }
 
     }
@@ -117,6 +133,8 @@ public class Gem : MonoBehaviour
 
         IEnumerator CheckMoveCo()
         {
+            board.state = Board.BoardState.wait;
+
             yield return new WaitForSeconds(.5f);
 
             // kiểm tra gem đã match3
@@ -129,6 +147,9 @@ public class Gem : MonoBehaviour
 
                 board.allGems[pos.x, pos.y] = this;
                 board.allGems[otherGem.pos.x, otherGem.pos.y] = otherGem;
+
+                yield return new WaitForSeconds(.5f);
+                board.state = Board.BoardState.move;
             }
             else
             {

@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.VisualScripting;
@@ -72,9 +73,81 @@ public class FindMatcher : MonoBehaviour
         {
             matches = matches.Distinct().ToList();
         }
-
-
+        CheckBomb();
+    }
+    void CheckBomb()
+    {
+        if (matches.Count > 0)
+        {
+            for (int i = 0; i < matches.Count; i++)
+            {
+                int x = matches[i].pos.x;
+                int y = matches[i].pos.y;
+                if (x > 0)
+                {
+                    if (board.allGems[x - 1, y] != null)
+                    {
+                        if (board.allGems[x - 1, y].type == Gem.GemType.bomb)
+                        {
+                            MarkBomb(new Vector2Int(x - 1, y), board.allGems[x - 1, y]);
+                        }
+                    }
+                }
+                if (x < board.width - 1)
+                {
+                    if (board.allGems[x + 1, y] != null)
+                    {
+                        if (board.allGems[x + 1, y].type == Gem.GemType.bomb)
+                        {
+                            MarkBomb(new Vector2Int(x + 1, y), board.allGems[x + 1, y]);
+                        }
+                    }
+                }
+                if (y > 0)
+                {
+                    if (board.allGems[x, y - 1] != null)
+                    {
+                        if (board.allGems[x, y - 1].type == Gem.GemType.bomb)
+                        {
+                            MarkBomb(new Vector2Int(x, y - 1), board.allGems[x, y - 1]);
+                        }
+                    }
+                }
+                if (y < board.height - 1)
+                {
+                    if (board.allGems[x, y + 1] != null)
+                    {
+                        if (board.allGems[x, y + 1].type == Gem.GemType.bomb)
+                        {
+                            MarkBomb(new Vector2Int(x, y + 1), board.allGems[x, y + 1]);
+                        }
+                    }
+                }
+            }
+        }
     }
 
-
+    private void MarkBomb(Vector2Int thePos, Gem theBomb)
+    {
+        for (int x = thePos.x - theBomb.burstRadius; x <= thePos.x + theBomb.burstRadius; x++)
+        {
+            for (int y = thePos.y - theBomb.burstRadius; y <= thePos.y + theBomb.burstRadius; y++)
+            {
+                {
+                    if (x >= 0 && x < board.width && y >= 0 && y < board.height)
+                    {
+                        if (board.allGems[x, y] != null)
+                        {
+                            board.allGems[x, y].isMatched = true;
+                            matches.Add(board.allGems[x, y]);
+                        }
+                    }
+                }
+            }
+        }
+        if (matches.Count > 0)
+        {
+            matches = matches.Distinct().ToList();
+        }
+    }
 }

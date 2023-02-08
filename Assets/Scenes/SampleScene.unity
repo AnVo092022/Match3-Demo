@@ -201,7 +201,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 519420028}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -260,7 +260,10 @@ MonoBehaviour:
   - {fileID: 6210468929595698009, guid: 28e95cccbc1c6394fa07b567b3973771, type: 3}
   - {fileID: 2176458698493565648, guid: c26a46c54a7cb2f4187c2f34815ab613, type: 3}
   - {fileID: 277198878845519628, guid: 2cec133a45f6d2940b88fbabc54e6565, type: 3}
+  Bomb: {fileID: 984602871391203968, guid: c5fa3ac195a8eca42b41b8f8fa69d8ad, type: 3}
   gemSpeed: 8
+  matcher: {fileID: 0}
+  state: 1
 --- !u!4 &1051894660
 Transform:
   m_ObjectHideFlags: 0
@@ -305,6 +308,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7a53930fc6fa4cd46b53216f879a5319, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  matches: []
 --- !u!4 &2031232588
 Transform:
   m_ObjectHideFlags: 0
